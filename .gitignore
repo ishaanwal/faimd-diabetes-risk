@@ -15,5 +15,9 @@ venv/
 .DS_Store
 Thumbs.db
 
-# Data
+# Data (raw inputs should not be tracked)
 data/*.csv
+
+# Generated outputs (reproducible from code)
+outputs/figures/
+outputs/tables/
