@@ -12,7 +12,7 @@ RANDOM_STATE = 42
 
 def main():
     df = pd.read_csv(DATA_PATH).drop_duplicates().reset_index(drop=True)
-    df["Diabetes_binary"] = (df["Diabetes_012"] > 0).astype(int)
+    df["Diabetes_binary"] = (df["Diabetes_012"] == 2).astype(int)
 
     X = df.drop(columns=["Diabetes_012", "Diabetes_binary"])
     y = df["Diabetes_binary"]

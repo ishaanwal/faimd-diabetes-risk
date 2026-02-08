@@ -12,7 +12,8 @@ def main():
     df = df.drop_duplicates().reset_index(drop=True)
 
     # 2. Create binary target
-    df["Diabetes_binary"] = (df["Diabetes_012"] > 0).astype(int)
+    df["Diabetes_binary"] = (df["Diabetes_012"] == 2).astype(int)
+
 
     # 3. Separate features and target
     X = df.drop(columns=["Diabetes_012", "Diabetes_binary"])
