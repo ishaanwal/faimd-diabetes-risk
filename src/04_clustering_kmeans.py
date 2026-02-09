@@ -15,7 +15,7 @@ OUT_TABLES = PROJECT_ROOT / "outputs" / "tables"
 OUT_FIGS = PROJECT_ROOT / "outputs" / "figures"
 
 RANDOM_STATE = 42
-SUBSAMPLE_SIZE = 30000          # speed fix
+SUBSAMPLE_SIZE = 30000          # purely for speed
 K_RANGE = range(2, 9)           # 2–8
 
 def load_feature_sets():
@@ -36,7 +36,7 @@ def choose_k_with_subsample(X_scaled, tag):
 
     scores = pd.DataFrame(rows)
 
-    # silhouette plot (subsample)
+    # silhouette plot used for optimal clusters
     plt.figure()
     plt.plot(scores["k"], scores["silhouette"], marker="o")
     plt.title(f"Silhouette (subsample) – {tag}")
@@ -59,63 +59,47 @@ def cluster_profiles(X, labels):
 def main():
     OUT_TABLES.mkdir(parents=True, exist_ok=True)
     OUT_FIGS.mkdir(parents=True, exist_ok=True)
-
     # Load + clean
     df = pd.read_csv(DATA_PATH).drop_duplicates().reset_index(drop=True)
-
-    # Targets (not used for clustering, but saved for later prevalence analysis)
+    # Targets saved for later
     df["Diabetes_binary"] = (df["Diabetes_012"] > 0).astype(int)
-
     feature_sets = load_feature_sets()
-
     configs = {
         "all_features": feature_sets["clustering_all_features"],
         "no_demographics": feature_sets["clustering_no_demographics"]
     }
-
     all_scores = []
     assignments = pd.DataFrame({
         "row_id": np.arange(len(df)),
         "Diabetes_012": df["Diabetes_012"].values,
         "Diabetes_binary": df["Diabetes_binary"].values
     })
-
     for tag, cols in configs.items():
         print(f"\nRunning clustering for: {tag}")
-
         X = df[cols].copy()
-
         # Scale for K-Means
         scaler = StandardScaler()
         X_scaled = scaler.fit_transform(X)
-
         # STEP 1: choose k on subsample
         scores = choose_k_with_subsample(X_scaled, tag)
         scores["feature_set"] = tag
         all_scores.append(scores)
-
         best_k = int(scores.loc[scores["silhouette"].idxmax(), "k"])
         print(f"[{tag}] selected k = {best_k}")
-
         # STEP 2: fit final model on FULL data
         km_final = KMeans(n_clusters=best_k, n_init=10, random_state=RANDOM_STATE)
         labels_full = km_final.fit_predict(X_scaled)
-
         # Save cluster profiles (means per feature per cluster)
         profile = cluster_profiles(X, labels_full)
         profile.to_csv(OUT_TABLES / f"cluster_profile_{tag}_k{best_k}.csv", index=True)
-
         # Save row-level assignments so later scripts don't need to refit K-Means
         assignments[f"cluster_{tag}_k{best_k}"] = labels_full
-
     # Save silhouette scores (k selection evidence)
     df_scores = pd.concat(all_scores, ignore_index=True)
     df_scores.to_csv(OUT_TABLES / "kmeans_silhouette_scores.csv", index=False)
-
     # Save row-level cluster assignments
     assignments_path = OUT_TABLES / "cluster_assignments.csv"
     assignments.to_csv(assignments_path, index=False)
-
     print("\nSaved:")
     print("- Silhouette plots:", OUT_FIGS)
     print("- Cluster profiles:", OUT_TABLES)

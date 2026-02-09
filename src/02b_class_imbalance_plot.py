@@ -11,7 +11,7 @@ OUT_FIGS.mkdir(parents=True, exist_ok=True)
 def main():
     df = pd.read_csv(DATA_PATH).drop_duplicates().reset_index(drop=True)
 
-    # Binary target: diabetes only vs non + prediabetes
+    # binary target so only diabetic vs non diabetic
     df["Diabetes_binary"] = (df["Diabetes_012"] == 2).astype(int)
 
     counts = df["Diabetes_binary"].value_counts().sort_index()

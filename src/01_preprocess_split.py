@@ -8,18 +8,16 @@ DATA_PATH = PROJECT_ROOT / "data" / "diabetes.csv"
 def main():
     df = pd.read_csv(DATA_PATH)
 
-    # 1. Drop duplicates
+    # First step: Remove duplicates
     df = df.drop_duplicates().reset_index(drop=True)
 
-    # 2. Create binary target
+    # Second step: Create binary feature
     df["Diabetes_binary"] = (df["Diabetes_012"] == 2).astype(int)
 
-
-    # 3. Separate features and target
+    # Third step: Separate the features from the target feature
     X = df.drop(columns=["Diabetes_012", "Diabetes_binary"])
     y = df["Diabetes_binary"]
-
-    # 4. Train-test split (stratified because of class imbalance)
+    # Fourth step: THE stratisfied train n test split
     X_train, X_test, y_train, y_test = train_test_split(
         X,
         y,
@@ -27,14 +25,10 @@ def main():
         random_state=42,
         stratify=y
     )
-
-    print("After preprocessing:")
-    print("Train shape:", X_train.shape)
-    print("Test shape:", X_test.shape)
-    print("\nTarget distribution (train):")
+    print("the training shape:", X_train.shape)
+    print("the test shape:", X_test.shape)
     print(y_train.value_counts(normalize=True))
 
-    # Save for later steps
     X_train.to_csv(PROJECT_ROOT / "data" / "X_train.csv", index=False)
     X_test.to_csv(PROJECT_ROOT / "data" / "X_test.csv", index=False)
     y_train.to_csv(PROJECT_ROOT / "data" / "y_train.csv", index=False)

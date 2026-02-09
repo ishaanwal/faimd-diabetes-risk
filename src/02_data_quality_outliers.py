@@ -7,12 +7,12 @@ DATA_PATH = PROJECT_ROOT / "data" / "diabetes.csv"
 OUT_TABLES = PROJECT_ROOT / "outputs" / "tables"
 OUT_FIGS = PROJECT_ROOT / "outputs" / "figures"
 
-# Expected value ranges based on dataset coding conventions
+# expected value ranges based on the documentation
 RANGES = {
-    # Target (3-class)
+    # the target variable
     "Diabetes_012": (0, 2),
 
-    # Mostly binary indicators
+    # mostly binary indicators
     "HighBP": (0, 1),
     "HighChol": (0, 1),
     "CholCheck": (0, 1),
@@ -28,16 +28,16 @@ RANGES = {
     "DiffWalk": (0, 1),
     "Sex": (0, 1),
 
-    # Ordinal / bounded counts
-    "GenHlth": (1, 5),      # general health: 1..5
-    "MentHlth": (0, 30),    # days in last 30 days
-    "PhysHlth": (0, 30),    # days in last 30 days
-    "Age": (1, 13),         # age category
+    # Ordinal features
+    "GenHlth": (1, 5),
+    "MentHlth": (0, 30),
+    "PhysHlth": (0, 30),
+    "Age": (1, 13),
     "Education": (1, 6),
     "Income": (1, 8),
 
-    # Continuous-ish
-    "BMI": (10, 80)         # practical plausibility band for outlier flagging (not “truth”)
+    # Continuous, range just decided
+    "BMI": (10, 80)
 }
 
 PLOT_COLS = ["BMI", "MentHlth", "PhysHlth", "GenHlth", "Age", "Income"]
@@ -52,7 +52,6 @@ def range_violations(df: pd.DataFrame) -> pd.DataFrame:
         if col not in df.columns:
             continue
         s = df[col]
-        # allow floats that represent ints
         bad_mask = (s < lo) | (s > hi)
         rows.append({
             "variable": col,
@@ -91,13 +90,13 @@ def main():
 
     df_raw = pd.read_csv(DATA_PATH)
 
-    # Record duplicates before removing (useful for report)
+    # record duplicates numbe
     dup_count = int(df_raw.duplicated().sum())
 
-    # Deduplicate
+    # drop them
     df = df_raw.drop_duplicates().reset_index(drop=True)
 
-    # Tables for report
+    # tables for report
     summ = summary_table(df_raw)
     summ.loc[0, "n_duplicates"] = dup_count
     summ.to_csv(OUT_TABLES / "data_quality_summary.csv", index=False)
@@ -105,10 +104,9 @@ def main():
     viol = range_violations(df)
     viol.to_csv(OUT_TABLES / "range_violations.csv", index=False)
 
-    # Quick prints for your console
     print("Saved:", OUT_TABLES / "data_quality_summary.csv")
     print("Saved:", OUT_TABLES / "range_violations.csv")
-    print("\nTop range violations (if any):")
+    print("\nTop range violations:")
     print(viol.head(10))
 
     # Figures
